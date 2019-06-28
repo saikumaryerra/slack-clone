@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+        <h1>channel</h1>
+        <form action="" method="post">
+            {{ form.hidden_tag() }}
+            <p>
+                {{ form.channelname.label }}<br>
+                {{ form.channelname(size=32) }}<br>
+                {% for error in form.channelname.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </p>
+            <p>
+                {{ form.submit() }}
+            </p>
+        </form>
+        <h4>Channels</h4>
+    {% for channel in channels %}
+        <p><a href="{{ url_for('main.chat',channelid=channel.id) }}">{{channel.channelname}}</a></p>
+    {% endfor %}
+{% endblock %}

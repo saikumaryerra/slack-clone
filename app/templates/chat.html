@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content%}
+{% for message in messages%}
+    <p>{{ message.sender_id }}</p>
+    <p>{{message.body}}|{{message.timestamp}}</p>
+{% endfor %}
+ <form id="formid" action="" method="post">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.message.label }}<br>
+            {{ form.message(size=32) }}<br>
+        </p>
+        <p>
+            {{ form.submit() }}
+        </p>
+</form> 
+{% endblock %}

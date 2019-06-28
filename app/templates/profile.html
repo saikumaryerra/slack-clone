@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content%}
+    <h1>{{ current_user.username }}</h1>
+    <p>last seen : {{ current_user.last_seen }}</p>
+    <h2>Channel List</h2>
+    {% for channel in channels %}
+        <p>{{channel.channelname}} <a href="{{ url_for('main.delete_channel',channel_id=channel.id,admin_id=channel.admin_id) }}">Delete</a></p>
+    {% endfor %}
+{% endblock %}
