@@ -134,6 +134,7 @@ dmypy.json
 .pyre/
 
 
+data.json
 
 test.py
 test.html

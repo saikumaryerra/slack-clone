@@ -19,4 +19,45 @@
     {% for channel in channels %}
         <p><a href="{{ url_for('main.chat',channelid=channel.id) }}">{{channel.channelname}}</a></p>
     {% endfor %}
-{% endblock %}
+    <button id="download" onclick="download()">download</button>
+    <a id="hidden-download" href="{{ url_for('main.download_file') }}" style="display: none;">download</a>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
+    <script>
+        var interval= 400;
+        function download (event){
+            $.ajax({
+                'url': "{{ url_for('main.download') }}",
+                'type': "GET",
+                'success': function(j,data,request) {
+                    status=request.getResponseHeader('url');
+
+                    taskCheckfinal(status);
+
+                }
+            });
+        }
+        function taskCheckfinal(status){
+            $.ajax({
+            'url': status,
+            'type': "GET",
+            'success': function(data) {
+                if (data['state']=='PENDING'){
+                    taskCheckfinal(status);
+                }
+                else if (data['state']=='FAILURE'){
+                    taskCheckfinal(status);
+                }
+                else if (data['state']=='PROGRESS'){
+                    taskCheckfinal(status);
+                }
+                else{
+                    document.getElementById('hidden-download').click();
+                }
+            }
+               
+        });
+        }
+
+
+    </script>
+    {% endblock %}

@@ -6,17 +6,20 @@ from flask_sqlalchemy import SQLAlchemy
 import os
 import logging
 from elasticsearch import Elasticsearch
-
+from celery import Celery
 
 db =SQLAlchemy()
 migrate = Migrate()
 login = LoginManager()
 login.login_view = 'auth.login'
 login.login_message='login required'
+celery = Celery(__name__, broker=Config.CELERY_BROKER_URL,backend=Config.CELERY_BACKEND_URL)
 
 def create_app(config_class=Config):
     chat_app=Flask(__name__)
     chat_app.config.from_object(Config)
+
+    celery.conf.update(chat_app.config)
 
     db.init_app(chat_app)
     migrate.init_app(chat_app,db)

@@ -1,12 +1,13 @@
 from app import db
 from app.main.forms import ChannelForm,ChatForm
-from app.main import bp
+from app.main import bp,tasks
 from app.main.forms import SearchForm
 from app.models import Channel,ChannelMessages
 from datetime import datetime
-from flask import current_app,flash,redirect,render_template,url_for,request, json,g
+from flask import current_app,flash,redirect,render_template,url_for,request, json,g,jsonify,render_template_string,send_file
 from flask_login import login_required,current_user
 from werkzeug.urls import url_parse
+from sqlalchemy import and_
 
 
 @bp.before_app_request
@@ -57,8 +58,6 @@ def profile():
 #     db.session.commit()
 #     return redirect(url_for('main.profile'))
 
-
-
 @bp.route('/chat/<channelid>',methods=['GET','POST'])
 @login_required
 def chat(channelid):
@@ -66,13 +65,32 @@ def chat(channelid):
     if not current_user.is_authenticated:
         return redirect(url_for('auth.login'))
     c=Channel.query.filter_by(id=channelid).first_or_404()
-    if form.validate_on_submit():
-        message = ChannelMessages(body=form.message.data,message_author=current_user,channel_id=channelid)
+    msg_body = request.get_json()
+    if msg_body:
+        message = ChannelMessages(body=msg_body['message'],message_author=current_user,channel_id=channelid)
         db.session.add(message)
-        db.session.commit()
-        return redirect(url_for('main.chat',channelid=channelid))
-    messages = ChannelMessages.query.filter_by(channel_id=channelid).order_by(ChannelMessages.timestamp)
-    return render_template('chat.html',messages=messages,form=form)
+        db.session.commit()  
+        response = {
+            'message':msg_body['message'],
+        } 
+        return jsonify(response)            
+    return render_template('chat.html',form=form,channelid=channelid)
+
+max_message_id=0
+@bp.route("/_sendMessages/<channelid>",methods=['GET'])
+@login_required
+def sendMessagesList(channelid):
+    messages=ChannelMessages.query.filter(and_(ChannelMessages.id > max_message_id,ChannelMessages.channel_id==channelid)  ).order_by(ChannelMessages.timestamp).all()
+    renderedHtml=getHtml(messages)
+    return renderedHtml
+
+def getHtml(messages):
+    text='''{% for message in messages%}
+                    <p>{{ message.sender_id }}</p>
+                    <p>{{message.body}}|{{message.timestamp}}</p>
+                {% endfor %}
+        '''
+    return render_template_string(text, messages=messages)
 
 @bp.route('/search')
 @login_required
@@ -86,3 +104,57 @@ def search():
     elif total==0:
         return redirect(url_for('main.index'))
     return render_template('search.html',channels=channels,title='search')    
+
+@bp.route('/download',methods=['GET','POST'])
+@login_required
+def download():
+
+    task=tasks.download_background.apply_async((current_user.id,))
+    return jsonify({}),{'url':url_for('main.task_check',task_id=task.id)}
+    # download_data = { 
+    #     'Name' : current_user.username,
+    #     'Email' : current_user.email,
+    # }
+    # channels = current_user.channels.all()
+    # channel = [channel.channelname for channel in channels]
+    # download_data['channels'] = list(channel)
+    # file = open('data.json','w') 
+    # file.write(json.dumps(download_data)) 
+    # file.close() 
+    # return send_file('../data.json', attachment_filename='download.json',as_attachment=True)
+@bp.route('/download_file')
+def download_file():
+    return send_file('../data.json', attachment_filename='download.json',as_attachment=True)
+
+@bp.route('/download/check/<task_id>')
+def task_check(task_id):
+    task = tasks.download_background.AsyncResult(task_id)
+    if task.state=='PENDING':
+        response = {
+            'current':0,
+            'total':100,
+            'state':task.state,
+            'status':'task pending'
+        }
+    elif task.state=='FAILURE':
+        response = {
+            'current':0,
+            'total':100,
+            'state':task.state,
+            'status':'task failed'
+        }
+    elif task.state == 'PROGRESS' :
+        response = {
+            'current':50,
+            'total':100,
+            'state':task.state,
+            'status':'task running'
+        }
+    else :
+        response = {
+            'current':100,
+            'total':100,
+            'state':task.state,
+            'status':'task done'
+        }
+    return jsonify(response)

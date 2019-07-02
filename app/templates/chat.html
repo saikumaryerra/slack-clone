@@ -1,10 +1,9 @@
 {% extends "base.html" %}
 {% block content%}
-{% for message in messages%}
-    <p>{{ message.sender_id }}</p>
-    <p>{{message.body}}|{{message.timestamp}}</p>
-{% endfor %}
- <form id="formid" action="" method="post">
+<div id="msg">
+
+</div>
+<form id="formid" action="" method="post">
         {{ form.hidden_tag() }}
         <p>
             {{ form.message.label }}<br>
@@ -13,5 +12,64 @@
         <p>
             {{ form.submit() }}
         </p>
-</form> 
+</form>
+
+
+{##<input placeholder="message" id="message">
+<button id="send">send</button>##}
+
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
+<script type="text/javascript">
+
+    var interval = 400;
+    function sendMessage(event) {
+        event.preventDefault();
+        var msg=String($("#message").val());
+        msg =msg.trim();
+        if (msg !== "")
+        {
+            let message ={ 'message':msg };
+        
+            $.ajax({
+                'url': "{{ url_for('main.chat',channelid=channelid) }}", 
+                'method': "POST", 
+                'data': JSON.stringify(message),
+                'contentType': 'application/json',
+                'success': function(data) {
+                    var messageElement =document.createElement('p');
+                    messageElement.innerHTML=data['message'];
+                    document.getElementById('msg').appendChild(messageElement);
+                    document.getElementById('message').value = '';
+                    recvMessage()
+                }
+            });
+        }
+    }
+    
+    function recvMessage(event) {
+        $.ajax({
+            'url': "{{ url_for('main.sendMessagesList',channelid=channelid) }}",
+            'type': "GET",
+            'success': function(data) {
+                $("#msg").html(data);          
+            },
+            'complete': function(result) {
+                setTimeout(recvMessage, interval);
+            }
+        });
+    }
+
+    $(document).ready(function() {
+        $("#message").keypress(function(e) {
+            var temp = document.getElementById('message').value;
+            var inputData = String(temp);
+            if (e.keyCode == 13 && inputData !== "") {
+                sendMessage(event);   
+            }
+        });
+        $("#submit").click(sendMessage);
+        setTimeout(recvMessage, interval);
+    });
+</script>
 {% endblock %}
