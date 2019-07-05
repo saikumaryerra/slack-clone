@@ -14,12 +14,7 @@
         </p>
 </form>
 
-
-{##<input placeholder="message" id="message">
-<button id="send">send</button>##}
-
-
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script type="text/javascript">
 
     var interval = 400;
@@ -49,7 +44,7 @@
     
     function recvMessage(event) {
         $.ajax({
-            'url': "{{ url_for('main.sendMessagesList',channelid=channelid) }}",
+            'url': "{{ url_for('main.get_all_channel_messages',channelid=channelid) }}",
             'type': "GET",
             'success': function(data) {
                 $("#msg").html(data);          

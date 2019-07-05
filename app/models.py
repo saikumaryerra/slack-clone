@@ -52,7 +52,6 @@ class User(UserMixin,db.Model):
     password_hash =  db.Column(db.String(128))
     last_seen=db.Column(db.DateTime,default=datetime.utcnow)
     channels = db.relationship('Channel',backref='admin',passive_deletes=True,lazy='dynamic')
-    # members = db.relationship('ChannelMembers',backref='member',lazy='dynamic')
     messages = db.relationship('ChannelMessages',backref='message_author',passive_deletes=True,lazy='dynamic')
     
     def set_password(self,password):
@@ -73,12 +72,13 @@ class Channel(SearchableMixin,db.Model):
     id=db.Column(db.Integer,primary_key=True)
     channelname=db.Column(db.String(64),index=True,unique = True)
     admin_id=db.Column(db.Integer,db.ForeignKey('user.id',ondelete='CASCADE'))
-    channelmessages = db.relationship('ChannelMessages',passive_deletes=True,backref = 'channel',lazy='dynamic')
+    channelmessages = db.relationship('ChannelMessages',passive_deletes=True,backref = 'channel',cascade="all, delete, delete-orphan",lazy='dynamic')
 
     def __repr__(self):
         return '<channel {}'.format(self.id)
 
-class ChannelMessages(db.Model):
+class ChannelMessages(SearchableMixin,db.Model):
+    __searchable__=['body']
     id = db.Column(db.Integer,primary_key=True)
     body = db.Column(db.String())
     timestamp = db.Column(db.DateTime,index=True,default=datetime.utcnow)

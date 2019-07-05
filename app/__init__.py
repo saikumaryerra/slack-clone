@@ -7,6 +7,7 @@ import os
 import logging
 from elasticsearch import Elasticsearch
 from celery import Celery
+from flask_bootstrap import Bootstrap
 
 db =SQLAlchemy()
 migrate = Migrate()
@@ -24,6 +25,7 @@ def create_app(config_class=Config):
     db.init_app(chat_app)
     migrate.init_app(chat_app,db)
     login.init_app(chat_app,db)
+    # bootstrap = Bootstrap(chat_app)
 
     chat_app.elasticsearch = Elasticsearch([chat_app.config['ELASTICSEARCH_URL']]) \
         if chat_app.config['ELASTICSEARCH_URL'] else None

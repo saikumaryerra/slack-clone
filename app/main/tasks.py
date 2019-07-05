@@ -1,6 +1,5 @@
 from app import celery,db,create_app
 from flask import json,jsonify,current_app
-from flask_login import current_user
 from app.models import User,Channel,ChannelMessages
 import time
 @celery.task(bind=True)
@@ -11,7 +10,6 @@ def download_background(self,current_id):
         print('bg started')
         time.sleep(5)
         print('sleep done')
-        time.sleep(5)
         user = User.query.filter_by(id=current_id).first()
         print(user.username)
         download_data = { 

@@ -1,39 +1,64 @@
-
-<html>
-    <head>
-      {% if title %}
+{% block title %}
+    {% if title %}
       <title>{{ title }} - chatApp</title>
       {% else %}
       <title>Welcome to chatApp</title>
       {% endif %}
-    </head>
-    <body>
-        <ul>
-            <li><a href="{{ url_for('main.index') }}">index</a></li>
-            {% if current_user.is_anonymous %}
-            <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-            {% else %}
-            <li><a href="{{ url_for('main.profile') }}">{{ current_user.username }}</a></li>
-            <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-            {% endif %}
-        </ul>
-        {% if g.search_form %}
-                <form  method="get"
-                        action="{{ url_for('main.search') }}">
-                        {{ g.search_form.q(size=20, class='form-control',
-                            placeholder=g.search_form.q.label.text) }}
-                </form>
+      
+      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+{% endblock %}
+    
+
+{% block navbar %}
+    <nav class="navbar navbar-expand-lg navbar-dark " style="background-color: #563d7c;">
+        <a class="navbar-brand" href="{{ url_for('main.index') }}">Slack</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="{{ url_for('main.index') }}">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="{{ url_for('main.profile') }}">{{ current_user.username }}</a>
+                </li>
+                {% if current_user.is_anonymous %}
+                <li class="nav-item active" >
+                    <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                </li>
+                {% else %}
+                <li class="nav-item active" >
+                    <a class="nav-link active" href="{{ url_for('auth.logout') }}">Logout</a>
+                </li>
                 {% endif %}
-        
-        {% with messages = get_flashed_messages() %}
+            </ul>
+            {% if g.search_form %}
+            <form method="get" action="{{ url_for('main.search') }}" class="form-inline my-2 my-lg-0">
+                {{ g.search_form.q(size=20, class='form-control',
+                            placeholder=g.search_form.q.label.text) }}
+            </form>
+            {% endif %}
+        </div>
+    </nav>
+{% endblock %}
+
+{% block content %}
+     {% with messages = get_flashed_messages() %}
         {% if messages %}
-        <ul>
+        <div>
             {% for message in messages %}
-            <li>{{ message }}</li>
+            <p>{{ message }}</p>
             {% endfor %}
-        </ul>
+        </div>
         {% endif %}
         {% endwith %}
-        {% block content %}{% endblock %}
-    </body>
-</html>
+           
+   
+    {% block app_content %}{% endblock %}
+
+{% endblock %}

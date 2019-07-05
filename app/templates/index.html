@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-
-{% block content %}
+{% set active_page = "index" %}
+{% block app_content %}
         <h1>channel</h1>
         <form action="" method="post">
             {{ form.hidden_tag() }}
@@ -21,6 +21,7 @@
     {% endfor %}
     <button id="download" onclick="download()">download</button>
     <a id="hidden-download" href="{{ url_for('main.download_file') }}" style="display: none;">download</a>
+    
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
     <script>
         var interval= 400;
@@ -41,23 +42,19 @@
             'url': status,
             'type': "GET",
             'success': function(data) {
-                if (data['state']=='PENDING'){
-                    taskCheckfinal(status);
-                }
-                else if (data['state']=='FAILURE'){
-                    taskCheckfinal(status);
-                }
-                else if (data['state']=='PROGRESS'){
-                    taskCheckfinal(status);
+                if (data['state']=='SUCCESS'){
+                    document.getElementById('hidden-download').click();
                 }
                 else{
-                    document.getElementById('hidden-download').click();
+                    taskCheckfinal(status);
                 }
             }
                
         });
         }
-
+        $(document).ready(function() {
+        setTimeout(taskCheckfinal, interval);
+    });
 
     </script>
     {% endblock %}
