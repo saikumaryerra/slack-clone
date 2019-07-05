@@ -3,6 +3,7 @@ from app.main.forms import ChannelForm,ChatForm
 from app.main import bp,tasks
 from app.main.forms import SearchForm
 from app.models import Channel,ChannelMessages
+from config import Config
 from datetime import datetime
 from flask import current_app,flash,redirect,render_template,url_for,request, json,g,jsonify,render_template_string,send_file
 from flask_login import login_required,current_user
@@ -15,7 +16,8 @@ def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
-        g.search_form = SearchForm()
+        if Config.ELASTICSEARCH_URL != 'none':
+            g.search_form = SearchForm()
     # g.locale = str(get_locale())
 
 @bp.route('/index',methods=['GET','POST'])
@@ -83,20 +85,20 @@ def get_all_channel_messages(channelid ,max_message_id=0):
                 {% endfor %}
         '''
     return render_template_string(text, messages=messages)
-
-@bp.route('/search')
-@login_required
-def search():
-    if not g.search_form.validate():
-        return redirect(url_for('main.index'))
-    channels, total_channels = Channel.search(g.search_form.q.data,1,10)
-    messages, total_messages = ChannelMessages.search(g.search_form.q.data,1,10)
-    if total_messages == 0:
-        if total_channels ==1:
-            return redirect(url_for('main.chat',channelid=channels.first().id))
-        elif total_channels==0:
+if Config.ELASTICSEARCH_URL != 'none':
+    @bp.route('/search')
+    @login_required
+    def search():
+        if not g.search_form.validate():
             return redirect(url_for('main.index'))
-    return render_template('search.html',channels=channels,messages=messages,title='search')    
+        channels, total_channels = Channel.search(g.search_form.q.data,1,10)
+        messages, total_messages = ChannelMessages.search(g.search_form.q.data,1,10)
+        if total_messages == 0:
+            if total_channels ==1:
+                return redirect(url_for('main.chat',channelid=channels.first().id))
+            elif total_channels==0:
+                return redirect(url_for('main.index'))
+        return render_template('search.html',channels=channels,messages=messages,title='search')    
 
 @bp.route('/download',methods=['GET','POST'])
 @login_required
