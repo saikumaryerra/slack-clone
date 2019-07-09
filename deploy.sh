@@ -51,7 +51,7 @@ EOF'
 sudo touch /etc/systemd/system/celery-worker.service
 sudo bash -c 'cat > /etc/systemd/system/celery-worker.service <<EOF
 [Unit]
-Description=celery instance to serve hackernews
+Description=celery instance to serve slack
 After=network.target
 
 [Service]
